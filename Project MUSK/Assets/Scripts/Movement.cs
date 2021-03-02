@@ -9,6 +9,10 @@ public class Movement : MonoBehaviour
     [SerializeField] float rotationThrust = 1f;
     [SerializeField] AudioClip rocketThrust;
 
+    [SerializeField] ParticleSystem leftBooster;
+    [SerializeField] ParticleSystem rightBooster;
+    [SerializeField] ParticleSystem mainBooster;
+
     Rigidbody rb;
     AudioSource audioSrc;
 
@@ -24,16 +28,55 @@ public class Movement : MonoBehaviour
         ProcessRotation();
     }
 
+    private void ProcessThrust()
+    {
+        if (Input.GetKey(KeyCode.Space))
+        {
+            StartThrust();
+        }
+        else
+        {
+            StopThrust();
+        }
+    }
     private void ProcessRotation()
     {
         if (Input.GetKey(KeyCode.A))
         {
-            ApplyRotation(rotationThrust);
+            RotateLeft();
         }
         else if (Input.GetKey(KeyCode.D))
         {
-            ApplyRotation(-rotationThrust);
+            RotateRight();
         }
+        else
+        {
+            StopRotating();
+        }
+    }
+
+
+    private void RotateLeft()
+    {
+        ApplyRotation(rotationThrust);
+        if (!rightBooster.isPlaying)
+        {
+            rightBooster.Play();
+        }
+    }
+    private void RotateRight()
+    {
+        ApplyRotation(-rotationThrust);
+        if (!leftBooster.isPlaying)
+        {
+            leftBooster.Play();
+        }
+    }
+
+    private void StopRotating()
+    {
+        rightBooster.Stop();
+        leftBooster.Stop();
     }
 
     private void ApplyRotation(float rotationThisFrame)
@@ -43,19 +86,25 @@ public class Movement : MonoBehaviour
         rb.freezeRotation = false;
     }
 
-    private void ProcessThrust()
+
+
+    private void StartThrust()
     {
-        if (Input.GetKey(KeyCode.Space))
+        rb.AddRelativeForce(Vector3.up * thrustSpeed * Time.deltaTime);
+        if (!audioSrc.isPlaying)
         {
-            rb.AddRelativeForce(Vector3.up * thrustSpeed * Time.deltaTime);
-            if (!audioSrc.isPlaying)
-            {
-                audioSrc.PlayOneShot(rocketThrust);
-            }
+            audioSrc.PlayOneShot(rocketThrust);
         }
-        else
+        if (!mainBooster.isPlaying)
         {
-            audioSrc.Stop();
+            mainBooster.Play();
         }
     }
+
+    private void StopThrust()
+    {
+        audioSrc.Stop();
+        mainBooster.Stop();
+    }
+
 }

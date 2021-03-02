@@ -4,20 +4,32 @@ using UnityEngine.SceneManagement;
 
 public class CollisionHandler : MonoBehaviour
 {
+    [SerializeField] AudioClip crashSound;
+    [SerializeField] AudioClip successSound;
+    [SerializeField] float delay = 1f;
+
+    [SerializeField] ParticleSystem crashEffect;
+    [SerializeField] ParticleSystem successEffect;
+
+    AudioSource audioSrc;
+
     int currentScene;
     int sceneCount;
-    [SerializeField]
-    float delay = 1f;
+    bool isTransitioning = false;
+
     
 
     private void Start()
     {
         currentScene = SceneManager.GetActiveScene().buildIndex;
         sceneCount = SceneManager.sceneCountInBuildSettings;
+        audioSrc = GetComponent<AudioSource>();
     }
 
     private void OnCollisionEnter(Collision collision)
     {
+        if (isTransitioning) { return; }
+
         switch (collision.gameObject.tag)
         {
             case "Friendly":
@@ -30,10 +42,16 @@ public class CollisionHandler : MonoBehaviour
                 StartCrashSequence();
                 break;
         }
+       
+ 
     }
 
     private void StartSuccessSequence()
     {
+        isTransitioning = true;
+        audioSrc.Stop();
+        audioSrc.PlayOneShot(successSound);
+        successEffect.Play();
         GetComponent<Movement>().enabled = false;
         Invoke("LoadNextScene", delay);
     }
@@ -61,8 +79,11 @@ public class CollisionHandler : MonoBehaviour
 
     private void StartCrashSequence()
     {
+        isTransitioning = true;
+        audioSrc.Stop();
+        audioSrc.PlayOneShot(crashSound);
+        crashEffect.Play();
         GetComponent<Movement>().enabled = false;
         Invoke("ReloadScene", delay);
-
     }
 }
